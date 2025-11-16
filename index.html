@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title">PhishShield - URL Validation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Nunito:wght=400;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #f472b6; /* Pink-400 (Pastel Pink) */
+            --primary-dark: #ec4899; /* Pink-500 */
+            --background-light: #fafafa; /* Very Light Gray */
+            --surface-soft: #ffffff;
+            --text-dark: #374151; /* Gray-700 */
+            --text-med: #6b7280; /* Gray-500 */
+        }
+
+        body {
+            font-family: 'Quicksand', sans-serif;
+            color: var(--text-dark);
+            background-color: var(--background-light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            line-height: 1.6;
+            /* Simple, geometric background pattern */
+            background-image: linear-gradient(to top right, #fce7f3, #ffffff);
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 800;
+        }
+
+        .theme-primary { color: var(--primary-color); }
+        .theme-bg { background-color: var(--primary-color); }
+        .theme-bg-hover:hover { background-color: var(--primary-dark); }
+
+        header {
+            background-color: var(--surface-soft);
+            border-bottom: 1px solid #f3e8ff; /* Lavender border */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-link {
+            color: var(--text-med);
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        .nav-link:hover { color: var(--primary-color); }
+        .nav-link.active {
+            color: var(--primary-dark);
+            border-bottom: 3px solid var(--primary-color);
+            padding-bottom: 5px;
+        }
+
+        .data-card {
+            background-color: var(--surface-soft);
+            border-radius: 2rem; /* Softer, rounder edges */
+            box-shadow: 0 10px 30px rgba(236, 72, 153, 0.1); /* Soft pink shadow */
+            transition: all 0.3s ease;
+            border: 2px solid #fbcfe8; /* Very light pink border */
+        }
+        .data-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(236, 72, 153, 0.15);
+        }
+
+        .input-control {
+            border: 2px solid #fbcfe8;
+            background-color: #fff;
+            color: var(--text-dark);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            border-radius: 1rem;
+        }
+        .input-control:focus {
+            border-color: var(--primary-dark);
+            box-shadow: 0 0 0 4px rgba(244, 114, 182, 0.2); /* Pink focus ring */
+            outline: none;
+        }
+
+        .button-primary {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 700;
+            border-radius: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(244, 114, 182, 0.4);
+        }
+        .button-primary:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(244, 114, 182, 0.6);
+        }
+
+        .page-content { display: none; }
+        .active-page { display: flex; justify-content: center; align-items: start; } 
+
+        /* Prediction Result Styling - Pastel Overrides */
+        #prediction-result-container {
+            border: 2px solid;
+            background-color: var(--surface-soft); 
+        }
+        #prediction-result-container.border-red-500 { border-color: #fca5a5; background-color: #fef2f2; } 
+        #prediction-result-container.border-yellow-500 { border-color: #fcd34d; background-color: #fffbeb; } 
+        #prediction-result-container.border-green-500 { border-color: #86efac; background-color: #f0fdf4; } 
+        
+        #prediction-result-container .text-red-700 { color: #b91c1c; } 
+        #prediction-result-container .text-yellow-700 { color: #b45309; } 
+        #prediction-result-container .text-green-700 { color: #047857; } 
+
+        .result-title {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 800;
+        }
+
+        .url-display {
+            font-family: 'Nunito', sans-serif;
+            background-color: #fce7f3; /* Lightest Pink */
+            color: #881337; /* Dark Pink Text */
+            border: 1px solid #f9a8d4;
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
+            <a href="#home" class="text-3xl font-extrabold text-gray-800 nav-link !p-0 !border-b-0">
+                <span class="theme-primary text-4xl mr-1">🛡️</span> PhishShield
+            </a>
+
+            <div class="hidden md:flex space-x-6 items-center" id="desktop-nav">
+                <a href="#home" class="nav-link text-lg">Home</a>
+                <a href="#service" class="nav-link text-lg">Check URL</a>
+                <a href="#about" class="nav-link text-lg">About Us</a>
+                <a href="#contact" class="nav-link text-lg">Contact</a>
+                
+                <div id="auth-status-desktop" class="flex space-x-3 items-center">
+                    <a href="#login" class="button-primary text-sm px-5 py-2">Sign In</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 w-full z-20">
+        <div id="flash-message-container">
+            </div>
+    </div>
+
+    <main class="flex-grow max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 w-full flex justify-center items-start">
+        
+        <div id="home" class="page-content active-page w-full">
+            <div class="data-card p-12 text-center max-w-3xl">
+                <h2 class="text-5xl font-extrabold text-gray-800 mb-4 leading-tight">Secure Your Clicks with <span class="theme-primary">PhishShield</span></h2>
+                <p class="text-xl text-gray-500 mb-8 max-w-3xl mx-auto">
+                    A simple and friendly tool for link validation. Protect yourself from suspicious URLs and phishing attempts with a single check.
+                </p>
+                
+                <div id="home-auth-section">
+                    <p class="text-gray-400 mb-6 text-base italic">Quick access to the validator requires a simple sign-in.</p>
+                    <a href="#login" class="button-primary text-xl px-10 py-4 inline-flex items-center space-x-2">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
+                        <span>Start Validating (Sign In)</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div id="service" class="page-content w-full">
+            <div class="max-w-3xl mx-auto data-card p-10">
+
+                <div class="mb-8 border-b border-pink-100 pb-5">
+                    <h2 class="text-4xl font-extrabold theme-primary">Link Validation Tool</h2>
+                    <p class="text-gray-500 text-lg mt-2">Paste your full link below. We'll do the safety check for you.</p>
+                </div>
+
+                <form id="detector-form" class="space-y-6">
+                    <div>
+                        <input type="url" name="url_to_check" id="url-input"
+                            class="w-full p-5 text-lg input-control rounded-2xl shadow-inner placeholder-gray-400"
+                            placeholder="https://your-suspicious-link.com"
+                            required />
+                    </div>
+
+                    <button type="submit" class="w-full py-4 text-xl button-primary rounded-2xl">
+                        <span class="inline-flex items-center space-x-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                            <span>Validate Now</span>
+                        </span>
+                    </button>
+                </form>
+
+                <div id="prediction-result-container"
+                    class="mt-10 p-8 rounded-2xl border-2"
+                    style="display: none;">
+                    </div>
+                
+                <div id="initial-message" class="mt-10 p-6 bg-pink-50 text-pink-700 border border-pink-200 rounded-xl">
+                    <p class="font-medium text-base">We are ready! Paste a link into the box above to start the validation process.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="login" class="page-content w-full">
+            <div class="max-w-md mx-auto data-card p-10">
+                <h2 class="text-4xl font-bold text-gray-800 mb-8 text-center theme-primary">Welcome Back!</h2>
+                <form id="login-form" class="space-y-6">
+                    <div>
+                        <label for="username" class="block text-sm font-medium text-gray-600 mb-2">Email</label>
+                        <input type="text" id="username-input" name="email" required value="user@example.com"
+                            class="mt-1 block w-full px-5 py-3 input-control rounded-lg shadow-sm">
+                    </div>
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-600 mb-2">Password</label>
+                        <input type="password" id="password-input" name="password" required value="password123"
+                            class="mt-1 block w-full px-5 py-3 input-control rounded-lg shadow-sm">
+                    </div>
+
+                    <button type="submit" class="w-full py-3 px-4 button-primary text-xl rounded-lg">
+                        Secure Sign In
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div id="about" class="page-content w-full">
+            <div class="max-w-3xl mx-auto data-card p-10">
+                <h2 class="text-4xl font-extrabold text-gray-800 border-b border-pink-100 pb-5 mb-8 theme-primary">Our Mission and Values</h2>
+                
+                <div class="space-y-6 text-gray-600 text-lg">
+                    <p>At **PhishShield**, we believe that online security should be **simple, friendly, and accessible** to everyone. Our mission is to empower users to click with confidence by providing quick, reliable, and easy-to-understand link validation.</p>
+                    
+                    <p class="font-semibold text-xl pt-4 theme-primary">The PhishShield Advantage:</p>
+                    <ul class="list-disc list-inside space-y-3 ml-4">
+                        <li>**Advanced Heuristics:** We use intelligent algorithms to detect complex phishing patterns, beyond simple blacklists.</li>
+                        <li>**User-First Approach:** Our interface is designed to be calm and clear, removing the anxiety often associated with security tools.</li>
+                        <li>**Transparency:** We explain *why* a link is flagged, giving you the knowledge to stay safe in the future.</li>
+                    </ul>
+
+                    <p class="text-gray-500 italic pt-4">"Security doesn't have to be complicated. It just needs to be smart."</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="contact" class="page-content w-full">
+            <div class="max-w-md mx-auto data-card p-10">
+                <h2 class="text-4xl font-bold text-gray-800 mb-8 text-center theme-primary">Get In Touch</h2>
+                
+                <div class="space-y-4 mb-8 text-center text-gray-500">
+                    <p>Have a question, feedback, or need to report a malicious link?</p>
+                    <p class="font-semibold text-pink-600">We're here to help you secure your digital life.</p>
+                </div>
+
+                <form id="contact-form" class="space-y-6">
+                    <div>
+                        <label for="contact-name" class="block text-sm font-medium text-gray-600 mb-2">Your Name</label>
+                        <input type="text" id="contact-name" name="name" required
+                            class="mt-1 block w-full px-5 py-3 input-control rounded-lg shadow-sm" placeholder="Jane Doe">
+                    </div>
+                    <div>
+                        <label for="contact-email" class="block text-sm font-medium text-gray-600 mb-2">Email Address</label>
+                        <input type="email" id="contact-email" name="email" required
+                            class="mt-1 block w-full px-5 py-3 input-control rounded-lg shadow-sm" placeholder="name@example.com">
+                    </div>
+                    <div>
+                        <label for="contact-message" class="block text-sm font-medium text-gray-600 mb-2">Message</label>
+                        <textarea id="contact-message" name="message" rows="4" required
+                            class="mt-1 block w-full px-5 py-3 input-control rounded-lg shadow-sm" placeholder="Tell us how we can assist you..."></textarea>
+                    </div>
+
+                    <button type="submit" class="w-full py-3 px-4 button-primary text-xl rounded-lg">
+                        Send Message
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        
+    </main>
+
+    <footer class="bg-white text-gray-400 py-6 mt-auto border-t border-pink-100">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center text-sm">
+            <p class="mb-2 sm:mb-0">&copy; 2025 PhishShield. Your Safety First.</p>
+            <p class="theme-primary font-semibold text-base">Security Score Engine v1.1</p>
+        </div>
+    </footer>
+
+    <script>
+        const pages = ['home', 'service', 'about', 'contact', 'login']; 
+        const pageTitles = {
+            'home': 'PhishShield - Welcome',
+            'service': 'PhishShield - Validation Tool',
+            'about': 'PhishShield - About Us',
+            'contact': 'PhishShield - Contact Us',
+            'login': 'PhishShield - Sign In'
+        };
+        let loggedInUser = null; 
+
+        // --- Utility Functions ---
+
+        function flashMessage(message, category = 'info') {
+            const container = document.getElementById('flash-message-container');
+            const colorMap = {
+                'danger': 'bg-red-100 text-red-700 border-red-400',
+                'success': 'bg-green-100 text-green-700 border-green-400',
+                'warning': 'bg-yellow-100 text-yellow-700 border-yellow-400',
+                'info': 'bg-pink-100 text-pink-700 border-pink-400' // Using pink for info
+            };
+            const colorClass = colorMap[category] || colorMap['info'];
+
+            const div = document.createElement('div');
+            div.className = `p-4 mb-4 text-sm rounded-xl shadow-md border flash-message ${colorClass} opacity-95 transition-opacity duration-500`; 
+            div.setAttribute('role', 'alert');
+            div.innerHTML = message;
+            container.appendChild(div);
+
+            setTimeout(() => {
+                div.classList.remove('opacity-95');
+                div.classList.add('opacity-0');
+                div.addEventListener('transitionend', () => div.remove());
+            }, 5000);
+        }
+
+        function updateAuthUI() {
+            const loggedIn = loggedInUser !== null;
+            const homeAuthSection = document.getElementById('home-auth-section');
+            const desktopStatus = document.getElementById('auth-status-desktop');
+
+            if (homeAuthSection) {
+                if (loggedIn) {
+                    const userName = loggedInUser.split('@')[0];
+                    homeAuthSection.innerHTML = `
+                        <p class="text-gray-500 mb-6 text-lg">Welcome, <span class="font-semibold theme-primary">${userName}</span>. The validator is unlocked.</p>
+                        <a href="#service"
+                            class="button-primary text-xl px-10 py-4 inline-flex items-center space-x-2">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            <span>Start Validating</span>
+                        </a>
+                    `;
+                } else {
+                    homeAuthSection.innerHTML = `
+                        <p class="text-gray-400 mb-6 text-base italic">Quick access to the validator requires a simple sign-in.</p>
+                        <a href="#login" class="button-primary text-xl px-10 py-4 inline-flex items-center space-x-2">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
+                            <span>Start Validating (Sign In)</span>
+                        </a>
+                    `;
+                }
+            }
+
+            if (loggedIn) {
+                const userName = loggedInUser.split('@')[0];
+                const loggedInHTML = `
+                    <span class="text-base font-semibold text-pink-600">Hi, ${userName}!</span>
+                    <button onclick="handleLogout()"
+                        class="px-4 py-2 text-sm font-semibold text-white bg-pink-500 rounded-full shadow-md hover:bg-pink-600 transition duration-150">Sign Out</button>
+                `;
+                desktopStatus.innerHTML = loggedInHTML;
+            } else {
+                desktopStatus.innerHTML = `
+                    <a href="#login" class="button-primary text-sm px-5 py-2">Sign In</a>
+                `;
+            }
+        }
+
+        // --- Routing and Core Logic ---
+
+        function renderPage(pageName) {
+            const titleElement = document.getElementById('page-title');
+            titleElement.textContent = pageTitles[pageName] || 'PhishShield';
+
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+
+            document.querySelectorAll('.page-content').forEach(page => {
+                page.classList.remove('active-page');
+            });
+
+            const targetPage = document.getElementById(pageName);
+            if (targetPage) {
+                targetPage.classList.add('active-page');
+
+                document.querySelectorAll(`a[href="#${pageName}"]`).forEach(link => {
+                    // Only apply 'active' class to main navigation links, not buttons or auth status links
+                    if (!link.classList.contains('button-primary') && link.closest('#auth-status-desktop') === null && link.closest('header')) {
+                        link.classList.add('active');
+                    }
+                });
+
+                if (pageName === 'service' && loggedInUser === null) {
+                    flashMessage('Please sign in to access the validation tool.', 'warning');
+                    window.location.hash = '#login';
+                    return;
+                }
+            } else {
+                renderPage('home');
+            }
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            const emailInput = document.getElementById('username-input').value;
+            const passwordInput = document.getElementById('password-input').value;
+
+            // Mock authentication logic
+            if (emailInput === 'user@example.com' && passwordInput === 'password123') {
+                loggedInUser = emailInput;
+                updateAuthUI();
+                flashMessage('Sign in successful! Welcome.', 'success');
+                window.location.hash = '#service';
+            } else {
+                flashMessage('Invalid email or password. Please check your details.', 'danger');
+            }
+        }
+
+        function handleLogout() {
+            loggedInUser = null;
+            updateAuthUI();
+            flashMessage('You have successfully signed out.', 'info');
+            window.location.hash = '#home';
+        }
+        
+        function handleContactSubmit(event) {
+            event.preventDefault();
+            // In a real application, you would send this data to a server
+            const name = document.getElementById('contact-name').value;
+            // const email = document.getElementById('contact-email').value;
+            // const message = document.getElementById('contact-message').value;
+
+            // console.log("Contact Form Submitted:", { name, email, message });
+            flashMessage(`Thank you, ${name}! Your message has been sent. We'll be in touch.`, 'success');
+            
+            // Reset the form after successful submission
+            document.getElementById('contact-form').reset(); 
+        }
+
+        // Detector Logic (Same Simple Scoring for consistency)
+        function getMockPrediction(url) {
+            const suspiciousKeywords = ['login', 'verify', 'update', 'account', 'secure', 'transfer', 'password', 'dropbox', 'paypal', 'prize', 'claim'];
+            let score = 0;
+
+            try {
+                const urlObj = new URL(url);
+                const domain = urlObj.hostname;
+                const keywordCount = suspiciousKeywords.filter(keyword => url.toLowerCase().includes(keyword)).length;
+                
+                if (domain.split('.').length > 4) score += 30;
+                if (url.includes('@')) score += 20;
+                if (urlObj.protocol !== 'https:') score += 25;
+                score += keywordCount * 8; 
+                
+                let riskPercentage = Math.min(100, score + (url.length > 50 ? 5 : 0) + (domain.includes('-') ? 5 : 0));
+                
+                let status = 'Secure and Valid';
+                if (riskPercentage > 70) {
+                    status = 'High Phishing Risk';
+                } else if (riskPercentage > 40) {
+                    status = 'Moderate Suspicion';
+                } else if (riskPercentage > 10) {
+                    status = 'Minor Concern Detected';
+                }
+
+                return { status, riskPercentage: Math.round(riskPercentage), url };
+            } catch (e) {
+                return { status: 'Invalid URL Format', riskPercentage: 100, url: url || 'N/A' };
+            }
+        }
+
+        function handleDetectorSubmit(event) {
+            event.preventDefault();
+            const urlInput = document.getElementById('url-input');
+            const urlToCheck = urlInput.value;
+            const resultContainer = document.getElementById('prediction-result-container');
+            const initialMessage = document.getElementById('initial-message');
+
+            if (!urlToCheck) {
+                flashMessage('Please enter a link to validate.', 'warning');
+                return;
+            }
+
+            initialMessage.style.display = 'none';
+
+            const prediction = getMockPrediction(urlToCheck);
+            
+            let borderClass, titleColor, statusLabel, advice;
+            let flashCategory;
+
+            if (prediction.riskPercentage > 70) {
+                borderClass = 'border-red-500';
+                titleColor = 'text-red-700';
+                statusLabel = '🛑 DANGER: High Risk!';
+                advice = 'Do NOT click this link or enter any personal information. It is highly likely to be a phishing attempt.';
+                flashCategory = 'danger';
+            } else if (prediction.riskPercentage > 40) {
+                borderClass = 'border-yellow-500';
+                titleColor = 'text-yellow-700';
+                statusLabel = '⚠️ Caution: Moderate Risk';
+                advice = 'Proceed with extreme caution. Verify the sender\'s identity independently before taking any action.';
+                flashCategory = 'warning';
+            } else {
+                borderClass = 'border-green-500';
+                titleColor = 'text-green-700';
+                statusLabel = '✅ Safe: Low Risk';
+                advice = 'The link appears safe based on our automated checks. Always practice caution, but this link is likely secure.';
+                flashCategory = 'success';
+            }
+            
+            flashMessage(`${statusLabel} (${prediction.riskPercentage}% Risk)`, flashCategory);
+
+            resultContainer.className = `mt-10 p-8 rounded-2xl border-2 ${borderClass}`;
+
+            const progressBarColor = prediction.riskPercentage > 70 ? 'bg-red-500' : prediction.riskPercentage > 40 ? 'bg-yellow-500' : 'bg-green-500';
+
+            resultContainer.innerHTML = `
+                <div class="flex items-center justify-between border-b border-pink-100 pb-4 mb-6">
+                    <h3 class="text-3xl result-title ${titleColor}">${statusLabel}</h3>
+                    <span class="text-4xl result-title ${titleColor}">${prediction.riskPercentage}%</span>
+                </div>
+                
+                <div class="space-y-4 text-gray-700">
+                    <p class="text-lg font-semibold">Classification: <span class="font-medium ${titleColor}">${prediction.status}</span></p>
+                    <p class="text-base font-medium">Link Scanned:</p>
+                    <p class="text-base break-all url-display p-3 rounded-xl">${prediction.url}</p>
+                    
+                    <div class="pt-4">
+                        <p class="text-sm font-bold theme-primary mb-2">Our Recommendation:</p>
+                        <p class="text-gray-600">${advice}</p>
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <div class="w-full bg-gray-200 rounded-full h-3">
+                        <div class="h-3 rounded-full ${progressBarColor} transition-all duration-1000 ease-out" style="width: ${prediction.riskPercentage}%;"></div>
+                    </div>
+                    <p class="text-xs text-right mt-2 ${titleColor} font-semibold">Risk Percentage</p>
+                </div>
+            `;
+            resultContainer.style.display = 'block';
+        }
+
+        // --- Initialization ---
+
+        function init() {
+            window.addEventListener('hashchange', () => {
+                const hash = window.location.hash.substring(1) || 'home';
+                renderPage(hash);
+            });
+
+            const initialHash = window.location.hash.substring(1) || 'home';
+            renderPage(initialHash);
+            updateAuthUI();
+
+            const loginForm = document.getElementById('login-form');
+            if (loginForm) {
+                loginForm.addEventListener('submit', handleLogin);
+            }
+
+            const detectorForm = document.getElementById('detector-form');
+            if (detectorForm) {
+                detectorForm.addEventListener('submit', handleDetectorSubmit);
+            }
+
+            const contactForm = document.getElementById('contact-form');
+            if (contactForm) {
+                contactForm.addEventListener('submit', handleContactSubmit);
+            }
+            
+            // Re-attaching hash change listener to all nav links (though the window listener is primary)
+            document.querySelectorAll('a[href^="#"]').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    const hash = link.getAttribute('href').substring(1);
+                    if (pages.includes(hash)) {
+                        window.location.hash = hash;
+                    }
+                });
+            });
+        }
+
+        window.handleLogout = handleLogout;
+
+        window.onload = init;
+    </script>
+</body>
+
+</html>
